@@ -1,4 +1,12 @@
 ---
+# Non-standard repositories required to install packages.
+# repos:
+#   - multilib
+
+# Use a package manager other than pacman (i.e. to support the AUR).
+# pacman: yaourt
+
+# List the packages with their categories below.
 packages:
   archutil:
     - python
