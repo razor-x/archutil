@@ -2,11 +2,15 @@
 
 [![MIT License](http://img.shields.io/badge/license-MIT-red.svg?style=flat)](./LICENSE.txt)
 
-Please see the `master` branch for the original
-[README](https://github.com/razor-x/archutil).
+Please see the upstream project for the original
+[README](https://github.com/gsingh93/archutil).
 
-This branch has been modified to use a `yaml` configuration file: `archutil.yml`.
-The location of this file can be specified via the `-c` flag.
+## Description
+
+This fork has been modified to use a `yaml` configuration file: `archutil.yml`.
+The configuration management functions have been removed.
+
+The location of `archutil.yml` can be specified via the `-c` flag.
 By default, `archutil` will look for this file in the following order:
 
 1. In the current working directory.
