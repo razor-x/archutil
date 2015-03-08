@@ -1,0 +1,309 @@
+#!/usr/bin/env python
+
+import argparse
+import os
+import re
+import subprocess
+import sys
+import yaml
+
+try:
+    from yaml import CLoader as Loader, CDumper as Dumper
+except ImportError:
+    from yaml import Loader, Dumper
+
+# Imported in main
+config = None
+
+class Struct:
+    def __init__(self, **entries):
+        self.__dict__.update(entries)
+
+class colors:
+    RED     = '\033[31m'
+    BLUE    = '\033[34m'
+    GREEN   = '\033[32m'
+    YELLOW  = '\033[33m'
+    DEFAULT = '\033[0m'
+
+
+def printc(m, c):
+    print(c + m + colors.DEFAULT)
+
+
+def print_msg(m, color=colors.DEFAULT):
+    printc("========== %s ==========" % m, color)
+
+
+class ListHandler:
+    def get_listed_packages(self, packages, categories):
+        """Returns a set of packages listed in `config.packages`"""
+        return set([p for c in categories for p in packages[c]])
+
+    def get_listed_groups(self, packages):
+        """Returns a list of packages in `config.packages` that are actually
+        groups"""
+        # TODO: Clean this up by just using pacman -Sg
+        command = "pacman -Sg %s | awk '{print $1}' | sort -u" \
+                  % " ".join(packages)
+        return subprocess.check_output(command,
+                shell=True, universal_newlines=True).rstrip().split('\n')
+
+    def get_installed_packages(self, groups):
+        """Returns a set of installed packages"""
+        command = ("pacman -Qe | awk '{print $1}'"
+                   "| grep -Fxv -f <(pacman -Qg %s"
+                   "| awk '{print $2}')") % " ".join(groups)
+        packages = subprocess.check_output(command,
+            shell=True, universal_newlines=True,
+            executable="/bin/bash").rstrip().split('\n')
+        for i in range(0, len(packages)):
+            packages[i] = packages[i].split()[0]
+        return set(packages)
+
+    def get_differing_packages(self, categories, inverse):
+        packages = self.get_listed_packages(config.packages, categories)
+        groups = self.get_listed_groups(packages)
+        groups.append('base')
+        installed_packages = self.get_installed_packages(groups)
+
+        if not inverse:
+            return list(installed_packages.difference(packages))
+        else:
+            return list(packages.difference(installed_packages))
+
+    def handle(self, args):
+        categories = config.packages.keys()
+        diff = None
+        if not args.inverse:
+            # Print all packages that are installed but not listed in the script
+            diff = self.get_differing_packages(config.packages.keys(), False)
+        else:
+            # Packages listed in the script but not installed
+            if args.categories != None:
+                categories = args.categories
+            diff = self.get_differing_packages(categories, True)
+
+        diff.sort()
+        if args.list:
+            print("['" + "',\n'".join(diff) + "']")
+        else:
+            print('\n'.join(diff))
+
+class InstallHandler:
+    def __init__(self, pacman):
+        self.pacman = pacman
+
+    def check_packages_exist(self, packages, categories):
+        bad_packages = []
+        dev_null = open(os.devnull, 'w')
+        package_list = [p for c in categories for p in packages[c]]
+
+        all_packages = subprocess.check_output([self.pacman, '-Ssq'],
+            universal_newlines=True).split('\n')
+        missing_packages = set(package_list) - set(all_packages)
+
+        # Remove groups from missing_packages
+        all_groups = set(subprocess.check_output(['pacman', '-Sg'],
+            universal_newlines=True).split('\n'))
+
+        missing_packages -= all_groups
+
+        # Fallback to checking individual bad packages if pacman is not used.
+        # This is required in case packages are actually in the AUR
+        # TODO: Use this https://wiki.archlinux.org/index.php/AurJson
+        bad_packages = []
+        if os.path.basename(self.pacman) != 'pacman':
+            for p in missing_packages:
+                retcode = subprocess.call(self.pacman + ' -Ssq %s | grep "^%s$"'
+                                          % (p, p), shell=True, stdout=dev_null)
+
+                if retcode != 0:
+                    bad_packages.append(p)
+        else:
+            bad_packages = missing_packages
+
+        return bad_packages
+
+    def check_required_repos(self):
+        repos = []
+        f = open('/etc/pacman.conf').read()
+        for repo in config.required_repos:
+            if re.search(r'\[%s\]' % repo, f, re.MULTILINE) == None:
+                repos.add(repo)
+        return repos
+
+    def update_repos(self):
+        dev_null = open(os.devnull, 'w')
+        printc('Updating package database, enter sudo password if prompted',
+               colors.YELLOW)
+        return subprocess.call(['sudo', self.pacman, '-Sy'], stdout=dev_null) == 0
+
+    # TODO: Function shouldn't need to know about test code,
+    # but I can't figure out any other way :(
+    def do_install(self, packages, categories, test=False):
+        package_list = []
+        for category in categories:
+            package_list += packages[category]
+
+        if not test:
+            command = [self.pacman, '-S', '--needed']
+        else:
+            # Turn off confirmations in test mode
+            command = [self.pacman, '-S', '--needed', '--noconfirm']
+
+        if os.path.basename(command[0]) == 'pacman':
+            command.insert(0, 'sudo')
+
+        command.extend(package_list)
+        subprocess.check_call(command)
+
+    def handle(self, args):
+        # Make sure all required repos are available
+        if does_var_exist('required_repos', list):
+            repos = self.check_required_repos()
+            if len(repos) > 0:
+                print_msg('The following repos must be enabled before package '
+                          'installation can continue: ' + ', '.join(repos),
+                          colors.RED)
+                return
+
+        if not self.update_repos():
+            print_msg('Failed to update package database', colors.RED)
+            return
+        print_msg('Update successful', colors.BLUE)
+
+        # Get list of categories to install
+        categories = None
+        if args.categories != None:
+            categories = args.categories
+            for category in categories:
+                if category not in config.packages:
+                    print_msg('Package category %s does not exist' % category,
+                    colors.RED)
+                    return
+        else:
+            categories = config.packages.keys()
+
+        if not args.skip_verification:
+            # Make sure all packages to be installed exist
+            printc('Checking that all packages exist... (this may take a while '
+                   'the pacman variable in archutil.yml is set to anything other '
+                   'than pacman)', colors.YELLOW)
+            bad_packages = self.check_packages_exist(config.packages, categories)
+            if len(bad_packages) > 0:
+                print_msg('The following packages could not be found in the repos '
+                          'and must be removed before installation can continue: '
+                          + ', '.join(bad_packages), colors.RED)
+                return
+
+        print_msg('Installing packages', colors.BLUE)
+        self.do_install(config.packages, categories)
+        print_msg('Install complete', colors.BLUE)
+
+
+def parse_arguments():
+    parser = argparse.ArgumentParser(description="Package management utility")
+    parser.add_argument('-c', '--config-path', help='Path to configy.py')
+    subparsers = parser.add_subparsers(dest='subcommand')
+
+    install_parser = subparsers.add_parser(
+        'install', help=('Installs specified package groups'))
+    install_parser.add_argument('-s', '--skip-verification', action='store_true',
+                                help=("Don't check if all packages you're about "
+                                "to install actually exist before attempting to "
+                                "install"))
+    install_parser.add_argument('--categories', nargs='+',
+                                help='Package categories to install')
+
+    list_parser = subparsers.add_parser(
+        'list',
+        help="Lists installed packages not already specified in archutil.yml")
+    list_parser.add_argument(
+        '-i', '--inverse', action='store_true',
+        help=('Lists the inverse, i.e. all packages specified in archutil.yml '
+              'but not currently installed'))
+    list_parser.add_argument(
+        '--categories', nargs='+',
+        help='Categories to use (only works with -i argument)')
+    list_parser.add_argument(
+        '-l', '--list', action='store_true',
+        help='Display output as a Python list')
+
+    return parser.parse_args()
+
+
+def does_var_exist(var_name, t):
+    return hasattr(config, var_name) and type(getattr(config, var_name)) == t
+
+
+def validate_config_file():
+    def check_var_exists(var_name, t):
+        if not does_var_exist(var_name, t):
+            type_name = t.__name__
+            msg = "config must contain a %s called `%s`"
+            print_msg(msg % (type_name, var_name), colors.RED)
+            return False
+        return True
+
+    return (check_var_exists('packages', dict))
+
+
+def get_config_file_path(args):
+    config_file_path = os.path.join(os.getcwd(), 'archutil.yml')
+
+    if not os.path.isfile(config_file_path):
+        config_file_path = '/usr/local/etc/archutil.yml'
+
+    if args.config_path != None:
+        if os.path.isabs(args.config_path):
+            config_file_path = args.config_path
+        else:
+            config_file_path = os.path.join(os.getcwd(), args.config_path)
+
+    if not os.path.isfile(config_file_path):
+        print_msg("%s does not exist" % config_file_path, colors.RED)
+        sys.exit(1)
+
+    return config_file_path
+
+def get_pacman():
+    if does_var_exist('pacman', str):
+        return config.pacman
+    else:
+        return 'pacman'
+
+def main():
+    args = parse_arguments()
+    config_file_path = get_config_file_path(args)
+
+    global config
+    config = {}
+    config_yaml = yaml.load(open(config_file_path, 'r'))
+
+    if 'pacman' in config_yaml:
+        config['pacman'] = config_yaml['pacman']
+
+    if 'repos' in config_yaml:
+        config['required_repos'] = config_yaml['repos']
+
+    config['packages'] = config_yaml['packages']
+
+    config = Struct(**config)
+
+    validate_config_file()
+
+    pacman = get_pacman();
+
+    handler = None
+    if args.subcommand == 'install':
+        handler = InstallHandler(pacman)
+    elif args.subcommand == 'list':
+        handler = ListHandler()
+    else:
+        raise ValueError("Invalid subcommand")
+
+    handler.handle(args)
+
+if __name__ == '__main__':
+    main()
