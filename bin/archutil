@@ -250,9 +250,11 @@ def validate_config_file():
 
 
 def get_config_file_path(args):
-    config_file_path = os.path.join(
-        os.path.dirname(os.path.realpath(__file__)),
-        os.pardir, 'archutil.yml')
+    config_file_path = os.path.join(os.getcwd(), 'archutil.yml')
+
+    if not os.path.isfile(config_file_path):
+        config_file_path = '/usr/local/etc/archutil.yml'
+
     if args.config_path != None:
         if os.path.isabs(args.config_path):
             config_file_path = args.config_path
