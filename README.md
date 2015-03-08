@@ -19,7 +19,7 @@ By default, `archutil` will look for this file in the following order:
 ## Installation
 
 Only `bin/archutil` is required.
-This can be installed manually to `/usr/local/sbin`.
+This can be installed manually to `/usr/local/bin`.
 
 You will also need the `python` and `python-yaml` packages.
 
@@ -29,7 +29,7 @@ https://io.evansosenko.com/archutil/archutil.
 For fetching and installing during initial setup, you can use
 
 ````bash
-$ [sudo] curl -o /usr/local/sbin/archutil https://goo.gl/w59RZt
+$ [sudo] curl -o /usr/local/bin/archutil https://goo.gl/w59RZt
 ````
 
 ## Contributing
