@@ -29,7 +29,8 @@ https://io.evansosenko.com/archutil/archutil.
 For fetching and installing during initial setup, you can use
 
 ````bash
-$ [sudo] curl -o /usr/local/bin/archutil https://goo.gl/w59RZt
+$ [sudo] curl -L -o /usr/local/bin/archutil https://goo.gl/w59RZt
+$ [sudo] chmod +x /usr/local/bin/archutil
 ````
 
 ## Contributing
