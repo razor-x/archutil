@@ -3,8 +3,11 @@
 # repos:
 #   - multilib
 
-# Use a package manager other than pacman (i.e. to support the AUR).
-# pacman: yaourt
+# Use a package manager other than pacman.
+# pacman: aura
+
+# Use a package manager for aur packages.
+# aur: "aura -A"
 
 # Collect categories together into sets.
 sets:

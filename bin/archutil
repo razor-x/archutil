@@ -102,8 +102,9 @@ class ListHandler:
             print('\n'.join(diff))
 
 class InstallHandler:
-    def __init__(self, pacman):
+    def __init__(self, pacman, aur):
         self.pacman = pacman
+        self.aur = aur
 
     def check_packages_exist(self, packages, categories):
         bad_packages = []
@@ -124,9 +125,9 @@ class InstallHandler:
         # This is required in case packages are actually in the AUR
         # TODO: Use this https://wiki.archlinux.org/index.php/AurJson
         bad_packages = []
-        if os.path.basename(self.pacman) != 'pacman':
+        if self.aur != None:
             for p in missing_packages:
-                retcode = subprocess.call(self.pacman + ' -Ssq %s | grep "^%s$"'
+                retcode = subprocess.call(self.aur + ' -Ssq %s | grep "^%s$"'
                                           % (p, p), shell=True, stdout=dev_null)
 
                 if retcode != 0:
@@ -134,7 +135,7 @@ class InstallHandler:
         else:
             bad_packages = missing_packages
 
-        return bad_packages
+        return [set(bad_packages), set(missing_packages) - set(bad_packages)]
 
     def check_required_repos(self):
         repos = []
@@ -152,10 +153,12 @@ class InstallHandler:
 
     # TODO: Function shouldn't need to know about test code,
     # but I can't figure out any other way :(
-    def do_install(self, packages, categories, test=False):
+    def do_install(self, packages, categories, aur_packages, test=False):
         package_list = []
         for category in categories:
             package_list += packages[category]
+
+        package_list = set(package_list) - aur_packages
 
         if not test:
             command = [self.pacman, '-S', '--needed']
@@ -168,6 +171,14 @@ class InstallHandler:
 
         command.extend(package_list)
         subprocess.check_call(command)
+
+        if self.aur != None:
+            command = self.aur.split()
+            command += ['-S', '--needed', '--noconfirm']
+            command.insert(0, 'sudo')
+
+            command.extend(aur_packages)
+            subprocess.check_call(command)
 
     def handle(self, args):
         # Make sure all required repos are available
@@ -210,7 +221,7 @@ class InstallHandler:
             printc('Checking that all packages exist... (this may take a while '
                    'the pacman variable in archutil.yml is set to anything other '
                    'than pacman)', colors.YELLOW)
-            bad_packages = self.check_packages_exist(config.packages, categories)
+            (bad_packages, aur_packages) = self.check_packages_exist(config.packages, categories)
             if len(bad_packages) > 0:
                 print_msg('The following packages could not be found in the repos '
                           'and must be removed before installation can continue: '
@@ -218,7 +229,7 @@ class InstallHandler:
                 return
 
         print_msg('Installing packages', colors.BLUE)
-        self.do_install(config.packages, categories)
+        self.do_install(config.packages, categories, aur_packages)
         print_msg('Install complete', colors.BLUE)
 
 
@@ -308,6 +319,12 @@ def main():
     if 'pacman' in config_yaml:
         config['pacman'] = config_yaml['pacman']
 
+    if 'aur' in config_yaml:
+        config['aur'] = config_yaml['aur']
+        aur = config['aur']
+    else:
+        aur = None
+
     if 'repos' in config_yaml:
         config['required_repos'] = config_yaml['repos']
 
@@ -324,7 +341,7 @@ def main():
 
     handler = None
     if args.subcommand == 'install':
-        handler = InstallHandler(pacman)
+        handler = InstallHandler(pacman, aur)
     elif args.subcommand == 'list':
         handler = ListHandler()
     else:
