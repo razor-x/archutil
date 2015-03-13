@@ -75,10 +75,18 @@ class ListHandler:
     def handle(self, args):
         diff = None
 
-        if args.categories != None:
-            categories = args.categories
-        else:
+        if args.categories == None and args.sets == None:
             categories = config.packages.keys()
+        else:
+            categories = []
+            if args.categories != None:
+                categories.extend(args.categories)
+
+            if args.sets != None:
+                categories.extend(
+                    set([c for s in args.sets for c in config.sets[s]]))
+
+        categories = list(set(categories))
 
         if not args.inverse:
             # Print all packages that are installed but not listed in the script
@@ -178,15 +186,24 @@ class InstallHandler:
 
         # Get list of categories to install
         categories = None
-        if args.categories != None:
-            categories = args.categories
+        if args.categories == None and args.sets == None:
+            categories = config.packages.keys()
+        else:
+            categories = []
+            if args.categories != None:
+                categories.extend(args.categories)
+
+            if args.sets != None:
+                categories.extend(
+                    set([c for s in args.sets for c in config.sets[s]]))
+
+            categories = list(set(categories))
+
             for category in categories:
                 if category not in config.packages:
                     print_msg('Package category %s does not exist' % category,
                     colors.RED)
                     return
-        else:
-            categories = config.packages.keys()
 
         if not args.skip_verification:
             # Make sure all packages to be installed exist
@@ -218,6 +235,8 @@ def parse_arguments():
                                 "install"))
     install_parser.add_argument('--categories', nargs='+',
                                 help='Package categories to install')
+    install_parser.add_argument('--sets', nargs='+',
+                                help='Category sets to install')
 
     list_parser = subparsers.add_parser(
         'list',
@@ -229,6 +248,8 @@ def parse_arguments():
     list_parser.add_argument(
         '--categories', nargs='+',
         help='Categories to use (only works with -i argument)')
+    list_parser.add_argument('--sets', nargs='+',
+                                help='Category sets to install (only works with -i argument)')
     list_parser.add_argument(
         '-l', '--list', action='store_true',
         help='Display output as a Python list')
@@ -289,6 +310,9 @@ def main():
 
     if 'repos' in config_yaml:
         config['required_repos'] = config_yaml['repos']
+
+    if 'sets' in config_yaml:
+        config['sets'] = config_yaml['sets']
 
     config['packages'] = config_yaml['packages']
 

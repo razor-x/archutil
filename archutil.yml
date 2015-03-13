@@ -6,6 +6,11 @@
 # Use a package manager other than pacman (i.e. to support the AUR).
 # pacman: yaourt
 
+# Collect categories together into sets.
+sets:
+  main:
+    - archutil
+
 # List the packages with their categories below.
 packages:
   archutil:
