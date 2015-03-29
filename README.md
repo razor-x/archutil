@@ -16,6 +16,8 @@ By default, `archutil` will look for this file in the following order:
 1. In the current working directory.
 2. In `/usr/local/etc`.
 
+Addtional changes include a new `--sets` flags and better AUR support.
+
 ## Installation
 
 Only `bin/archutil` is required.
