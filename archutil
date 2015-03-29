@@ -174,7 +174,7 @@ class InstallHandler:
 
         if self.aur != None and len(aur_packages) > 0:
             command = self.aur.split()
-            command += ['-S', '--needed', '--noconfirm']
+            command += ['--needed', '--noconfirm']
             command.insert(0, 'sudo')
 
             command.extend(aur_packages)
