@@ -7,7 +7,8 @@ Please see the upstream project for the original
 
 ## Description
 
-This fork has been modified to use a `yaml` configuration file: `archutil.yml`.
+This fork has been updated for Python 3,
+and modified to use a `yaml` configuration file: `archutil.yml`.
 The configuration management functions have been removed.
 
 The location of `archutil.yml` can be specified via the `-c` flag.
