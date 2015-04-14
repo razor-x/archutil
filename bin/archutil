@@ -218,9 +218,7 @@ class InstallHandler:
 
         if not args.skip_verification:
             # Make sure all packages to be installed exist
-            printc('Checking that all packages exist... (this may take a while '
-                   'the pacman variable in archutil.yml is set to anything other '
-                   'than pacman)', colors.YELLOW)
+            printc('Checking that all packages exist', colors.YELLOW)
             (bad_packages, aur_packages) = self.check_packages_exist(config.packages, categories)
             if len(bad_packages) > 0:
                 print_msg('The following packages could not be found in the repos '
