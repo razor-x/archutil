@@ -1,0 +1,21 @@
+{
+  "name": "archutil",
+  "version": "0.1.0",
+  "authors": [
+    "Gulshan Singh <gsingh2011@gmail.com>",
+    "Evan Sosenko <razorx@evansosenko.com>"
+  ],
+  "description": "A tool for listing and backing up explicitly installed packages.",
+  "main": "bin/archutil",
+  "keywords": [
+    "arch",
+    "arch linux",
+    "config"
+  ],
+  "license": "MIT",
+  "homepage": "https://github.com/razor-x/archutil",
+  "private": true,
+  "ignore": [
+    "**/.*"
+  ]
+}
