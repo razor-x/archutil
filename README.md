@@ -1,5 +1,6 @@
 # archutil
 
+[![Release](https://img.shields.io/github/release/razor-x/archutil.svg)](https://github.com/razor-x/archutil/releases)
 [![MIT License](https://img.shields.io/github/license/razor-x/archutil.svg)](./LICENSE.txt)
 
 Please see the upstream project for the original
