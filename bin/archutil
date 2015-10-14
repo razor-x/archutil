@@ -149,7 +149,7 @@ class InstallHandler:
         dev_null = open(os.devnull, 'w')
         printc('Updating package database, enter sudo password if prompted',
                colors.YELLOW)
-        return subprocess.call(['sudo', self.pacman, '-Sy'], stdout=dev_null) == 0
+        return subprocess.call(['sudo', '-S', self.pacman, '-Sy'], stdout=dev_null) == 0
 
     # TODO: Function shouldn't need to know about test code,
     # but I can't figure out any other way :(
@@ -167,6 +167,7 @@ class InstallHandler:
             command = [self.pacman, '-S', '--needed', '--noconfirm']
 
         if os.path.basename(command[0]) == 'pacman':
+            command.insert(0, '-S')
             command.insert(0, 'sudo')
 
         command.extend(package_list)
@@ -176,6 +177,7 @@ class InstallHandler:
             command = self.aur.split()
             command.extend(aur_packages)
             command += ['--needed', '--noconfirm']
+            command.insert(0, '-S')
             command.insert(0, 'sudo')
 
             subprocess.check_call(command)
