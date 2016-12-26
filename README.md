@@ -28,7 +28,8 @@ This can be installed manually to `/usr/local/bin`.
 You will also need the `python` and `python-yaml` packages.
 
 For convenience, the latest version of `archutil` is provided at
-https://io.evansosenko.com/archutil/archutil.
+https://io.evansosenko.com/archutil/archutil
+and a `package.json` is included for use with npm or yarn.
 
 For fetching and installing during initial setup, you can use
 

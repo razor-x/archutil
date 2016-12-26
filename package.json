@@ -1,0 +1,25 @@
+{
+  "name": "@razor-x/archutil",
+  "version": "1.1.2",
+  "description": "An Arch Linux tool for listing and backing up explicitly installed packages.",
+  "homepage": "https://github.com/razor-x/archutil",
+  "bugs": "https://github.com/razor-x/archutil/issues",
+  "repository": "razor-x/archutil",
+  "license": "MIT",
+  "author": {
+    "name": "Evan Sosenko",
+    "email": "razorx@evansosenko.com"
+  },
+  "contributors": [
+    {
+      "name": "Gulshan Singh",
+      "email": "gsingh2011@gmail.com"
+    }
+  ],
+  "files": [
+    "bin"
+  ],
+  "scripts": {
+    "postversion": "git push && git push --tags"
+  }
+}
