@@ -1,6 +1,6 @@
 {
   "name": "@razor-x/archutil",
-  "version": "1.1.2",
+  "version": "1.2.0",
   "description": "An Arch Linux tool for listing and backing up explicitly installed packages.",
   "homepage": "https://github.com/razor-x/archutil",
   "bugs": "https://github.com/razor-x/archutil/issues",
