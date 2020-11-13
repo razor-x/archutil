@@ -1,7 +1,7 @@
 # archutil
 
-[![Release](https://img.shields.io/github/release/razor-x/archutil.svg)](https://github.com/razor-x/archutil/releases)
-[![MIT License](https://img.shields.io/github/license/razor-x/archutil.svg)](./LICENSE.txt)
+[![Release](https://img.shields.io/github/release/rxrc/archutil.svg)](https://github.com/rxrc/archutil/releases)
+[![MIT License](https://img.shields.io/github/license/rxrc/archutil.svg)](./LICENSE.txt)
 
 Please see the upstream project for the original
 [README](https://github.com/gsingh93/archutil).
@@ -44,7 +44,7 @@ Please submit and comment on bug reports and feature requests.
 
 To submit a patch:
 
-1. Fork it (https://github.com/razor-x/vimrc/fork).
+1. Fork it (https://github.com/rxrc/vimrc/fork).
 2. Create your feature branch (`git checkout -b my-new-feature`).
 3. Make changes.
 4. Commit your changes (`git commit -am 'Add some feature'`).

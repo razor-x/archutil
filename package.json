@@ -3,9 +3,9 @@
   "version": "1.2.2",
   "private": true,
   "description": "An Arch Linux tool for listing and backing up explicitly installed packages.",
-  "homepage": "https://github.com/razor-x/archutil",
-  "bugs": "https://github.com/razor-x/archutil/issues",
-  "repository": "razor-x/archutil",
+  "homepage": "https://github.com/rxrc/archutil",
+  "bugs": "https://github.com/rxrc/archutil/issues",
+  "repository": "rxrc/archutil",
   "license": "MIT",
   "author": {
     "name": "Evan Sosenko",
