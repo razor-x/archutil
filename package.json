@@ -1,6 +1,7 @@
 {
-  "name": "@razor-x/archutil",
+  "name": "@rxrc/archutil",
   "version": "1.2.1",
+  "private": true,
   "description": "An Arch Linux tool for listing and backing up explicitly installed packages.",
   "homepage": "https://github.com/razor-x/archutil",
   "bugs": "https://github.com/razor-x/archutil/issues",
