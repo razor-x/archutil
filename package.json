@@ -1,6 +1,6 @@
 {
   "name": "@rxrc/archutil",
-  "version": "1.2.5",
+  "version": "1.2.6",
   "description": "An Arch Linux tool for listing and backing up explicitly installed packages.",
   "homepage": "https://github.com/rxrc/archutil",
   "bugs": "https://github.com/rxrc/archutil/issues",
